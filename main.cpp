@@ -5,34 +5,43 @@
 
 using namespace std;
 
+void printTable(vector<vector<double> > in);
+vector<vector<double> > addDatatoTable();
+
 int main() 
 {
     // initializes a 2D vector and "activeFeatures" vector
-    vector<vector<double> > table;
+    vector<vector<double> > table = addDatatoTable();
     vector<int> activeFeatures;
 
-    // adds dataset values to the vector
-    ifstream input("CS170_Small_Data_69.txt");
+    // printing table for data input testing
+    printTable(table);
+}
+
+vector<vector<double> > addDatatoTable()
+{
+    vector<vector<double> > temp;
+    ifstream input("CS170_Small_Data__69.txt");
 
     if (!input.is_open()) 
     {
-        return -1;
+        cout << "Failed to Open" << endl;
+        return temp;
     }
     string line;
     int currRow = 0;
     while (getline(input, line))
     {
+        temp.resize(currRow+1);
         istringstream sstream(line);
         string strValue;
         while (sstream >> strValue)
         {
-            table[currRow].push_back(stod(strValue));
+            temp[currRow].push_back(stod(strValue));
         }
         currRow++;
     }
-
-    printTable(table);
-    cout << "hello" << endl;
+    return temp;
 }
 
 void printTable(vector<vector<double> > in)
@@ -41,8 +50,10 @@ void printTable(vector<vector<double> > in)
     {
         for(int k = 0; k < in[i].size(); k++)
         {
-            cout << in[i][k] << endl;
+            cout << in[i][k];
+            cout << " ";
         }
+        cout << endl;
     }
 }
 
