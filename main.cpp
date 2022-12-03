@@ -10,6 +10,7 @@ void printTable(vector<vector<double> > in);
 vector<vector<double> > addDatatoTable();
 bool LeftOutNearestNeighbor(int row, vector<vector<double> >* data, vector<int> features);
 double getEuclideanDistance(int row1, int row2, vector<vector<double> >* data, vector<int> features);
+double getLOOAccuracy(vector<vector<double> >* data, vector<int> features);
 
 int main() 
 {
@@ -22,20 +23,21 @@ int main()
     // printTable(*table);
 
     // adding activeFeatures for testing
+    activeFeatures.push_back(5);
+    activeFeatures.push_back(2);
     activeFeatures.push_back(1);
-    activeFeatures.push_back(3);
-    activeFeatures.push_back(6);
 
-    LeftOutNearestNeighbor(1, table, activeFeatures);
-    LeftOutNearestNeighbor(10, table, activeFeatures);
-    LeftOutNearestNeighbor(100, table, activeFeatures);
+    // LeftOutNearestNeighbor(1, table, activeFeatures);
+    // LeftOutNearestNeighbor(10, table, activeFeatures);
+    // LeftOutNearestNeighbor(100, table, activeFeatures);
 
+    cout << to_string(getLOOAccuracy(table, activeFeatures)) << endl;
 }
 
 vector<vector<double> > addDatatoTable()
 {
     vector<vector<double> > temp;
-    ifstream input("CS170_Small_Data__96.txt");
+    ifstream input("CS170_Small_Data__88.txt");
 
     if (!input.is_open()) 
     {
@@ -80,7 +82,6 @@ bool LeftOutNearestNeighbor(int excludedRow, vector<vector<double> >* data, vect
         if (i != excludedRow)
         {
             double currDistance = getEuclideanDistance(excludedRow, i, data, features);
-            cout << "Distance for " + to_string(i) + " is " + to_string(currDistance) << endl;
             if (currDistance < minDistance)
             {
                 minDistance = currDistance;
@@ -90,10 +91,8 @@ bool LeftOutNearestNeighbor(int excludedRow, vector<vector<double> >* data, vect
     }
     if (data->at(minDistRow)[0] == data->at(excludedRow)[0]) 
     {
-        cout << "The instance at the " + to_string(excludedRow) + " row was correctly determined to be class " + to_string(data->at(minDistRow)[0]) << endl;
         return true;
     }
-    cout << "Closest row was " + to_string(minDistRow) << endl;
     return false;
 }
 
@@ -107,4 +106,18 @@ double getEuclideanDistance(int rowIndex1, int rowIndex2, vector<vector<double> 
         squaredDifference += pow(rowValue1-rowValue2, 2);
     }
     return sqrt(squaredDifference);
+}
+
+double getLOOAccuracy(vector<vector<double> >* data, vector<int> features)
+{
+    int totalNumber = data->size();
+    double correctClassification = 0;
+    for (int i = 0; i < totalNumber; i++)
+    {
+        if (LeftOutNearestNeighbor(i, data, features))
+        {
+            correctClassification++;
+        }
+    }
+    return correctClassification/totalNumber * 100;
 }
