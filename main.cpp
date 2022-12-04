@@ -3,21 +3,23 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include <ctime>
 
 using namespace std;
 
 void printTable(vector<vector<double> > in);
 void printFeatures(vector<int>* features);
-vector<vector<double> > addDatatoTable();
+vector<vector<double> > addDatatoTable(string file);
 bool LeftOutNearestNeighbor(int row, vector<vector<double> >* data, vector<int>* features);
 double getEuclideanDistance(int row1, int row2, vector<vector<double> >* data, vector<int>* features);
 double getLOOAccuracy(vector<vector<double> >* data, vector<int>* features);
-void ForwardSelection(vector<vector<double> >* data, vector<int>* features);
+void ForwardSelection(vector<vector<double> >* data, vector<int>* features, string file);
 
 int main() 
 {
     // initializes a 2D vector and "activeFeatures" vector
-    vector<vector<double> > temp = addDatatoTable();
+    string datafile = "CS170_Large_Data__21.txt";
+    vector<vector<double> > temp = addDatatoTable(datafile);
     vector<vector<double> >* table = &temp;
     vector<int> tempFeatures;
     vector<int>* activeFeatures = &tempFeatures;
@@ -26,33 +28,31 @@ int main()
     // printTable(*table);
 
     // adding activeFeatures for testing
-    activeFeatures->push_back(1);
-    activeFeatures->push_back(6);
-    //activeFeatures->push_back(3);
-    printFeatures(activeFeatures);
+    // activeFeatures->push_back(37);
+    // activeFeatures->push_back(40);
 
     // LeftOutNearestNeighbor(1, table, activeFeatures);
     // LeftOutNearestNeighbor(10, table, activeFeatures);
     // LeftOutNearestNeighbor(100, table, activeFeatures);
 
-    cout << to_string(getLOOAccuracy(table, activeFeatures)) << endl;
-    //ForwardSelection(table, activeFeatures);
+    // cout << to_string(getLOOAccuracy(table, activeFeatures)) << endl;
+    ForwardSelection(table, activeFeatures, datafile);
 }
 
 void printFeatures(vector<int>* features)
 {
-    cout << "Current features are ";
+    cout << "{ ";
     for(int i = 0; i < features->size(); i++)
     {
         cout << features->at(i) << " ";
     }
-    cout << endl;
+    cout << "}";
 }
 
-vector<vector<double> > addDatatoTable()
+vector<vector<double> > addDatatoTable(string file)
 {
     vector<vector<double> > temp;
-    ifstream input("CS170_Small_Data__96.txt");
+    ifstream input(file);
 
     if (!input.is_open()) 
     {
@@ -134,11 +134,18 @@ double getLOOAccuracy(vector<vector<double> >* data, vector<int>* features)
             correctClassification++;
         }
     }
-    return double(correctClassification)/double(totalNumber) * 100;
+    double accuracy = double(correctClassification)/double(totalNumber) * 100;
+
+    // cout << "   Using feature(s) ";
+    // printFeatures(features);
+    // cout << " accuracy is " << accuracy << "%" << endl;
+
+    return accuracy;
 }
 
-void ForwardSelection(vector<vector<double> >* data, vector<int>* features)
+void ForwardSelection(vector<vector<double> >* data, vector<int>* features, string file)
 {
+    clock_t time = clock();
     features->clear();
     vector<bool> status(data->at(0).size());
     status.at(0) = true;
@@ -147,6 +154,7 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features)
     vector<bool> bestOverallStatus;
     double bestOverallAccuracy = 0;
     int activeFeatures = 0;
+    cout << "Searching through combinations of up to " << status.size() << " total features in \"" << file << "\"." << endl << endl;
 
     while (!finished)
     {
@@ -155,6 +163,8 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features)
         double bestFeatureAccuracy = 0;
         activeFeatures++;
         features->resize(activeFeatures);
+        cout << " " << activeFeatures << " total features being tested at " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
+
         for (int i = 1; i < status.size(); i++)
         {
             if (!status.at(i))
@@ -162,11 +172,6 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features)
                 finished = false;
                 features->at(activeFeatures-1) = i;
                 double currAccuracy = getLOOAccuracy(data, features);
-                cout << "i is " << i << endl;
-                cout << "activefeatures-1 is " << activeFeatures-1 << endl;
-                printFeatures(features);
-                cout << "Accuracy: " << currAccuracy << endl;
-                cout << endl;
                 if (currAccuracy > bestFeatureAccuracy) 
                 {
                     bestFeatureAccuracy = currAccuracy;
@@ -176,6 +181,11 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features)
         }
         status.at(bestFeature) = true;
         features->at(activeFeatures-1) = bestFeature;
+
+        // cout << endl << "Feature set ";
+        // printFeatures(features);
+        // cout << " was best in this pool with an accuracy of " << bestFeatureAccuracy << "%" << endl << endl;
+
         if (bestFeatureAccuracy > bestOverallAccuracy)
         {
             bestOverallAccuracy = bestFeatureAccuracy;
@@ -183,15 +193,15 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features)
         }
     }
     features->clear();
-    cout << "The combination with the highest accuracy was features ";
+    cout << "The combination with the highest accuracy overall was features ";
     for(int i = 1; i < bestOverallStatus.size(); i++)
     {
         if (bestOverallStatus.at(i))
         {
-            cout << to_string(i) << " ";
             features->push_back(i);
         }
     }
-    cout << "for an accuracy of " << bestOverallAccuracy << endl;
-
+    printFeatures(features);
+    cout << " with an accuracy of " << bestOverallAccuracy << "%." << endl << endl;
+    cout << "Total Computing Time: " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
 }
