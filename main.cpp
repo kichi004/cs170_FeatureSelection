@@ -14,11 +14,12 @@ bool LeftOutNearestNeighbor(int row, vector<vector<double> >* data, vector<int>*
 double getEuclideanDistance(int row1, int row2, vector<vector<double> >* data, vector<int>* features);
 double getLOOAccuracy(vector<vector<double> >* data, vector<int>* features);
 void ForwardSelection(vector<vector<double> >* data, vector<int>* features, string file);
+void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, string file);
 
 int main() 
 {
     // initializes a 2D vector and "activeFeatures" vector
-    string datafile = "CS170_Small_Data__88.txt";
+    string datafile = "CS170_Large_Data__21.txt";
     vector<vector<double> > temp = addDatatoTable(datafile);
     vector<vector<double> >* table = &temp;
     vector<int> tempFeatures;
@@ -28,15 +29,17 @@ int main()
     // printTable(*table);
 
     // adding activeFeatures for testing
-    // activeFeatures->push_back(37);
-    // activeFeatures->push_back(40);
+    // activeFeatures->push_back(21);
+    // activeFeatures->push_back(10);
 
     // LeftOutNearestNeighbor(1, table, activeFeatures);
     // LeftOutNearestNeighbor(10, table, activeFeatures);
     // LeftOutNearestNeighbor(100, table, activeFeatures);
 
-    // cout << to_string(getLOOAccuracy(table, activeFeatures)) << endl;
+    // getLOOAccuracy(table, activeFeatures);
+
     ForwardSelection(table, activeFeatures, datafile);
+    BackwardsElimination(table, activeFeatures, datafile);
 }
 
 void printFeatures(vector<int>* features)
@@ -154,7 +157,7 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
     vector<bool> bestOverallStatus;
     double bestOverallAccuracy = 0;
     int activeFeatures = 0;
-    cout << "Searching through combinations of up to " << status.size() << " total features in \"" << file << "\"." << endl << endl;
+    cout << "Searching through combinations of up to " << status.size()-1 << " total features in \"" << file << "\"." << endl << endl;
 
     while (!finished)
     {
@@ -163,7 +166,7 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
         double bestFeatureAccuracy = 0;
         activeFeatures++;
         features->resize(activeFeatures);
-        cout << " " << activeFeatures << " total features being tested at " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
+        cout << "Checking for " << activeFeatures << " feature combinations at " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
 
         for (int i = 1; i < status.size(); i++)
         {
@@ -193,7 +196,7 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
         }
     }
     features->clear();
-    cout << "The combination with the highest accuracy overall was features ";
+    cout << endl << "The combination with the highest accuracy overall was features ";
     for(int i = 1; i < bestOverallStatus.size(); i++)
     {
         if (bestOverallStatus.at(i))
@@ -202,6 +205,79 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
         }
     }
     printFeatures(features);
-    cout << " with an accuracy of " << bestOverallAccuracy << "%." << endl << endl;
+    cout << " with an accuracy of " << bestOverallAccuracy << "%." << endl;
+    cout << "Total Computing Time: " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
+}
+
+void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, string file)
+{
+    clock_t time = clock();
+    features->clear();
+    int size = data->at(0).size()-1;
+    features->resize(size);
+    for(int i = 1; i < size+1; i++) {
+        features->at(i-1) = i;
+    }
+    bool finished = false;
+
+    vector<int> bestOverallFeatures; //initializes as all false
+    double bestOverallAccuracy = 0;
+    int activeFeatures = size;
+    cout << "Searching through combinations of up to " << size << " total features in \"" << file << "\"." << endl << endl;
+
+    while (activeFeatures != 1)
+    {
+        finished = true;
+        int bestFeaturetoRemove = 0;
+        double bestAccuracy = 0;
+        double worstAccuracy = 100;
+        cout << " " << activeFeatures-1 << " feature combinations being tested at " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
+
+        int firstFeature = features->at(0);
+        for(int i = 0; i < activeFeatures; i++)
+        {
+            int currFeature = features->at(0);
+            features->erase(features->begin());
+
+            double currAccuracy = getLOOAccuracy(data, features);
+            if (currAccuracy < worstAccuracy) 
+            {
+                worstAccuracy = currAccuracy;
+            }
+            if (currAccuracy > bestAccuracy)
+            {
+                bestAccuracy = currAccuracy;
+                bestFeaturetoRemove = i;
+            }
+
+            features->push_back(currFeature);
+        }
+        cout << "   Removing feature " << features->at(bestFeaturetoRemove) << endl;
+        features->erase(features->begin()+bestFeaturetoRemove);
+        activeFeatures--;
+
+        // cout << endl << "Feature set ";
+        // printFeatures(features);
+        // cout << " was best in this pool with an accuracy of " << bestFeatureAccuracy << "%" << endl << endl;
+
+        if (bestAccuracy > bestOverallAccuracy)
+        {
+            bestOverallAccuracy = bestAccuracy;
+            bestOverallFeatures.clear();
+            for (int i = 0; i < features->size(); i++)
+            {
+                bestOverallFeatures.push_back(features->at(i));
+            }
+        }
+        // break;
+    }
+    features->clear();
+    cout << endl << "The combination with the highest accuracy overall was features ";
+    for(int i = 0; i < bestOverallFeatures.size(); i++)
+    {
+        features->push_back(bestOverallFeatures.at(i));
+    }
+    printFeatures(features);
+    cout << " with an accuracy of " << bestOverallAccuracy << "%." << endl;
     cout << "Total Computing Time: " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
 }
