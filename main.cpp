@@ -18,7 +18,7 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
 int main() 
 {
     // initializes a 2D vector and "activeFeatures" vector
-    string datafile = "CS170_Large_Data__21.txt";
+    string datafile = "CS170_Small_Data__88.txt";
     vector<vector<double> > temp = addDatatoTable(datafile);
     vector<vector<double> >* table = &temp;
     vector<int> tempFeatures;
