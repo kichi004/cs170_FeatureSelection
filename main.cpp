@@ -19,7 +19,7 @@ void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, 
 int main() 
 {
     // initializes a 2D vector and "activeFeatures" vector
-    string datafile = "CS170_Large_Data__21.txt";
+    string datafile = "CS170_Small_Data__89.txt";
     vector<vector<double> > temp = addDatatoTable(datafile);
     vector<vector<double> >* table = &temp;
     vector<int> tempFeatures;
@@ -185,9 +185,9 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
         status.at(bestFeature) = true;
         features->at(activeFeatures-1) = bestFeature;
 
-        // cout << endl << "Feature set ";
-        // printFeatures(features);
-        // cout << " was best in this pool with an accuracy of " << bestFeatureAccuracy << "%" << endl << endl;
+        cout << "   Feature set ";
+        printFeatures(features);
+        cout << " was best in this pool with an accuracy of " << bestFeatureAccuracy << "%" << endl;
 
         if (bestFeatureAccuracy > bestOverallAccuracy)
         {
@@ -229,8 +229,8 @@ void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, 
     {
         finished = true;
         int bestFeaturetoRemove = 0;
-        double bestAccuracy = 0;
-        double worstAccuracy = 100;
+        double bestAccuracy = getLOOAccuracy(data, features);
+        double worstAccuracy = bestAccuracy;
         cout << " " << activeFeatures-1 << " feature combinations being tested at " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
 
         int firstFeature = features->at(0);
@@ -252,13 +252,13 @@ void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, 
 
             features->push_back(currFeature);
         }
-        cout << "   Removing feature " << features->at(bestFeaturetoRemove) << endl;
+        // cout << "   Removing feature " << features->at(bestFeaturetoRemove) << endl;
         features->erase(features->begin()+bestFeaturetoRemove);
         activeFeatures--;
 
-        // cout << endl << "Feature set ";
+        // cout << "Feature set ";
         // printFeatures(features);
-        // cout << " was best in this pool with an accuracy of " << bestFeatureAccuracy << "%" << endl << endl;
+        // cout << " was best in this pool with an accuracy of " << bestAccuracy << "%" << endl;
 
         if (bestAccuracy > bestOverallAccuracy)
         {
