@@ -18,38 +18,39 @@ void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, 
 
 int main() 
 {
+    // User inputs file name
+    string input;
+    std::cout << "This is Keita Ichii's Feature Selection Algorithm." << endl; 
+    std::cout << "Type in the name of the file to test: ";
+    cin >> input;
+    string datafile = input;
+
     // initializes a 2D vector and "activeFeatures" vector
-    string datafile = "CS170_Small_Data__89.txt";
     vector<vector<double> > temp = addDatatoTable(datafile);
     vector<vector<double> >* table = &temp;
     vector<int> tempFeatures;
     vector<int>* activeFeatures = &tempFeatures;
 
-    // printing table for data input testing
-    // printTable(*table);
-
-    // adding activeFeatures for testing
-    // activeFeatures->push_back(21);
-    // activeFeatures->push_back(10);
-
-    // LeftOutNearestNeighbor(1, table, activeFeatures);
-    // LeftOutNearestNeighbor(10, table, activeFeatures);
-    // LeftOutNearestNeighbor(100, table, activeFeatures);
-
-    // getLOOAccuracy(table, activeFeatures);
-
-    ForwardSelection(table, activeFeatures, datafile);
-    BackwardsElimination(table, activeFeatures, datafile);
+    // User inputs desired algorithm
+    int inputNum;
+    std::cout << "\nType the number of the desired algorithm.\n1) Forward Selection\n2) Backward Elimination\n3) Both" << endl;
+    cin >> inputNum;
+    if (inputNum == 1 || inputNum == 3) {ForwardSelection(table, activeFeatures, datafile);}
+    if (inputNum == 2 || inputNum == 3) {BackwardsElimination(table, activeFeatures, datafile);}
+    if (inputNum == 4)
+    {
+        // Testing Space
+    }
 }
 
 void printFeatures(vector<int>* features)
 {
-    cout << "{ ";
+    std::cout << "{ ";
     for(int i = 0; i < features->size(); i++)
     {
-        cout << features->at(i) << " ";
+        std::cout << features->at(i) << " ";
     }
-    cout << "}";
+    std::cout << "}";
 }
 
 vector<vector<double> > addDatatoTable(string file)
@@ -59,7 +60,7 @@ vector<vector<double> > addDatatoTable(string file)
 
     if (!input.is_open()) 
     {
-        cout << "Failed to Open" << endl;
+        std::cout << "Failed to Open" << endl;
         return temp;
     }
     string line;
@@ -84,13 +85,15 @@ void printTable(vector<vector<double> > in)
     {
         for(int k = 0; k < in[i].size(); k++)
         {
-            cout << in[i][k];
-            cout << " ";
+            std::cout << in[i][k];
+            std::cout << " ";
         }
-        cout << endl;
+        std::cout << endl;
     }
 }
 
+// finds the nearest neighbor to the excluded row, then returns a boolean based on whether or not the neighbor 
+// and the excluded row share the same class.
 bool LeftOutNearestNeighbor(int excludedRow, vector<vector<double> >* data, vector<int>* features)
 {
     double minDistance = __DBL_MAX__;
@@ -126,6 +129,7 @@ double getEuclideanDistance(int rowIndex1, int rowIndex2, vector<vector<double> 
     return sqrt(squaredDifference);
 }
 
+// calls the Nearest Neighbor function on every row and then counts to get accuracy percentage.
 double getLOOAccuracy(vector<vector<double> >* data, vector<int>* features)
 {
     int totalNumber = data->size();
@@ -139,9 +143,9 @@ double getLOOAccuracy(vector<vector<double> >* data, vector<int>* features)
     }
     double accuracy = double(correctClassification)/double(totalNumber) * 100;
 
-    // cout << "   Using feature(s) ";
-    // printFeatures(features);
-    // cout << " accuracy is " << accuracy << "%" << endl;
+    std::cout << "   Using feature(s) ";
+    printFeatures(features);
+    std::cout << " accuracy is " << accuracy << "%" << endl;
 
     return accuracy;
 }
@@ -157,7 +161,7 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
     vector<bool> bestOverallStatus;
     double bestOverallAccuracy = 0;
     int activeFeatures = 0;
-    cout << "Searching through combinations of up to " << status.size()-1 << " total features in \"" << file << "\"." << endl << endl;
+    std::cout << "\nApplying Forward Selection to search through combinations of up to " << status.size()-1 << " total features in \"" << file << "\" of " << data->size()+0 << " instances." << endl << endl;
 
     while (!finished)
     {
@@ -166,7 +170,7 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
         double bestFeatureAccuracy = 0;
         activeFeatures++;
         features->resize(activeFeatures);
-        cout << "Checking for " << activeFeatures << " feature combinations at " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
+        std::cout << "Checking for " << activeFeatures << " feature combinations at " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
 
         for (int i = 1; i < status.size(); i++)
         {
@@ -185,9 +189,9 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
         status.at(bestFeature) = true;
         features->at(activeFeatures-1) = bestFeature;
 
-        cout << "   Feature set ";
+        std::cout << "\n   Feature set ";
         printFeatures(features);
-        cout << " was best in this pool with an accuracy of " << bestFeatureAccuracy << "%" << endl;
+        std::cout << " was best in this pool with an accuracy of " << bestFeatureAccuracy << "%\n" << endl;
 
         if (bestFeatureAccuracy > bestOverallAccuracy)
         {
@@ -196,7 +200,7 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
         }
     }
     features->clear();
-    cout << endl << "The combination with the highest accuracy overall was features ";
+    std::cout << endl << "The combination with the highest accuracy overall was features ";
     for(int i = 1; i < bestOverallStatus.size(); i++)
     {
         if (bestOverallStatus.at(i))
@@ -205,8 +209,8 @@ void ForwardSelection(vector<vector<double> >* data, vector<int>* features, stri
         }
     }
     printFeatures(features);
-    cout << " with an accuracy of " << bestOverallAccuracy << "%." << endl;
-    cout << "Total Computing Time: " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
+    std::cout << " with an accuracy of " << bestOverallAccuracy << "%." << endl;
+    std::cout << "Total Computing Time: " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
 }
 
 void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, string file)
@@ -223,15 +227,18 @@ void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, 
     vector<int> bestOverallFeatures; //initializes as all false
     double bestOverallAccuracy = 0;
     int activeFeatures = size;
-    cout << "Searching through combinations of up to " << size << " total features in \"" << file << "\"." << endl << endl;
+    std::cout << "\nApplying Backward Elimination to search through combinations of up to " << size << " total features in \"" << file << "\" of " << data->size()+0 << " instances." << endl << endl;
+
+    getLOOAccuracy(data, features);
+    std::cout << endl;
 
     while (activeFeatures != 1)
     {
         finished = true;
         int bestFeaturetoRemove = 0;
-        double bestAccuracy = getLOOAccuracy(data, features);
-        double worstAccuracy = bestAccuracy;
-        cout << " " << activeFeatures-1 << " feature combinations being tested at " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
+        double bestAccuracy = 0;
+        double worstAccuracy = 100;
+        std::cout << " " << activeFeatures-1 << " feature combinations being tested at " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
 
         int firstFeature = features->at(0);
         for(int i = 0; i < activeFeatures; i++)
@@ -252,13 +259,13 @@ void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, 
 
             features->push_back(currFeature);
         }
-        // cout << "   Removing feature " << features->at(bestFeaturetoRemove) << endl;
+        // std::cout << "   Removing feature " << features->at(bestFeaturetoRemove) << endl;
         features->erase(features->begin()+bestFeaturetoRemove);
         activeFeatures--;
 
-        // cout << "Feature set ";
-        // printFeatures(features);
-        // cout << " was best in this pool with an accuracy of " << bestAccuracy << "%" << endl;
+        std::cout << "\n   Feature set ";
+        printFeatures(features);
+        std::cout << " was best in this pool with an accuracy of " << bestAccuracy << "%\n" << endl;
 
         if (bestAccuracy > bestOverallAccuracy)
         {
@@ -272,12 +279,12 @@ void BackwardsElimination(vector<vector<double> >* data, vector<int>* features, 
         // break;
     }
     features->clear();
-    cout << endl << "The combination with the highest accuracy overall was features ";
+    std::cout << endl << "The combination with the highest accuracy overall was features ";
     for(int i = 0; i < bestOverallFeatures.size(); i++)
     {
         features->push_back(bestOverallFeatures.at(i));
     }
     printFeatures(features);
-    cout << " with an accuracy of " << bestOverallAccuracy << "%." << endl;
-    cout << "Total Computing Time: " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
+    std::cout << " with an accuracy of " << bestOverallAccuracy << "%." << endl;
+    std::cout << "Total Computing Time: " << fixed << setprecision(2) << (float)(clock()-time)/CLOCKS_PER_SEC << " seconds." << endl;
 }
